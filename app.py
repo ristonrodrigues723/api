@@ -18,7 +18,8 @@ app =Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger =logging.getLogger(__name__)
 
-DATA_FILE = os.path.join(os.path.dirname(__file__), "data.json")
+DATA_FILE = os.path.join('/tmp', 'data.json')
+
 
 
 
