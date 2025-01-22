@@ -1,5 +1,5 @@
 from flask import Flask, jsonify,request
-from model.quotes import JokeSchema,QuoteSchema,FactSchema
+
 # from marshmallow import ValidationError was for dtaa-type validation but now theres really no use of it
 import json
 import logging
