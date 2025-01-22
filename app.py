@@ -53,6 +53,12 @@ def save_data(jokes,quotes,facts):
         raise
 
 
+@app.route('/')
+def home():
+    return "Welcome to the API! Please use the /jokes, /quotes, or /facts routes."
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('favicon.ico')
 
 
 @app.route("/jokes")
