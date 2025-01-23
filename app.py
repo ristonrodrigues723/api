@@ -2,25 +2,53 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import os
-
-firebase_credentials=os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
-print("firebase cred:", firebase_credentials)
-
-if firebase_credentials:
-    cred_dict = json.loads(firebase_credentials)
-    cred = credentials.Certificate('cred_dict')
-    firebase_admin.initialize_app(cred, {
-    'databaseURL':'https://flask-api-fadda-default-rtdb.firebaseio.com'
-})
-else:
-    print("error: FIRebase credentials not loaded from env var")   
-
-from flask import Flask, jsonify,request
-
-# from marshmallow import ValidationError was for dtaa-type validation but now theres really no use of it
 import json
 import logging
-import os 
+import tempfile
+
+def initialize_firebase():
+    firebase_credentials = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
+    
+    print("Environment variables:")
+    for key, value in os.environ.items():
+        if 'FIREBASE' in key:
+            print(f"{key}: {value is not None}")
+    
+    if not firebase_credentials:
+        print("ERROR: No Firebase credentials found in environment variables")
+        raise ValueError("Firebase credentials not found")
+
+    try:
+        # Try parsing with different approaches
+        try:
+            # Attempt 1: Direct parsing
+            cred_dict = json.loads(firebase_credentials)
+        except json.JSONDecodeError:
+            # Attempt 2: Replace single quotes with double quotes
+            cred_dict = json.loads(firebase_credentials.replace("'", '"'))
+        
+        # Create a temporary file to store credentials
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_file:
+            json.dump(cred_dict, temp_file)
+            temp_file_path = temp_file.name
+        
+        # Initialize Firebase using the temporary file
+        cred = credentials.Certificate(temp_file_path)
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://flask-api-fadda-default-rtdb.firebaseio.com'
+        })
+        
+        print("Firebase initialized successfully")
+    except Exception as e:
+        print(f"Detailed Firebase initialization error: {e}")
+        print("Raw credentials:", firebase_credentials)
+        raise
+
+# Call this before creating any database references
+initialize_firebase()
+
+# from marshmallow import ValidationError was for dtaa-type validation but now theres really no use of it
+from flask import Flask, jsonify,request
 
 app =Flask(__name__)
 
@@ -199,49 +227,6 @@ def rate_joke(content_id):
 #         content_ref = db.reference(content_map[content_type]).child(str(content_id))
 #         content =content_ref.get()
         
-
-
-#         if content is None:
-#             return jsonify({"error": f"{content_type} with id{content_id } not found pls try again or msg maximus on slack(.-.)"}),
-
-
-
-
-#         content['ratings'].append(rating)
-#         content['average_rating'] = sum(content['ratings']) / len(content['ratings'])
-#         content_ref.update(content)
-#         return jsonify({
-#             "message":"sucessfully added rating",
-#             "content_type": content_type,
-#             "content": content
-
-
-         
-         
-#         }), 200
-
-
-
-
-
- 
-
-
-#no need of json as firebase is being used currently
-        # for item in content_list:
-        #     if item['id']== content_id:
-        #         item['ratings'].append(rating)
-        #         item['average_rating']= sum(item['ratings']) /len(item['ratings'])
-        #         save_data(jokes,quotes,facts)
-        #         return jsonify({
-        #             "message":"sucessfully added rating",
-        #             "content_type": content_type,
-        #             "content":item
-
-
-         
-         
-        #         }), 200
 
     except Exception as e:
         logger.error(f"same error addin string")
