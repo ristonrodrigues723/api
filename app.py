@@ -7,7 +7,13 @@ import logging
 import tempfile
 
 def initialize_firebase():
+
     firebase_credentials = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
+if not firebase_credentials:
+    print("Error: Environment variable not found.")
+else:
+    print(f"Firebase credentials (partial): {firebase_credentials[:50]}...")
+
     
     print("Environment variables:")
     for key, value in os.environ.items():
@@ -19,20 +25,20 @@ def initialize_firebase():
         raise ValueError("Firebase credentials not found")
 
     try:
-        # Try parsing with different approaches
+  
         try:
-            # Attempt 1: Direct parsing
+           
             cred_dict = json.loads(firebase_credentials)
         except json.JSONDecodeError:
-            # Attempt 2: Replace single quotes with double quotes
+          
             cred_dict = json.loads(firebase_credentials.replace("'", '"'))
         
-        # Create a temporary file to store credentials
+      
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_file:
             json.dump(cred_dict, temp_file)
             temp_file_path = temp_file.name
         
-        # Initialize Firebase using the temporary file
+       
         cred = credentials.Certificate(temp_file_path)
         firebase_admin.initialize_app(cred, {
             'databaseURL': 'https://flask-api-fadda-default-rtdb.firebaseio.com'
